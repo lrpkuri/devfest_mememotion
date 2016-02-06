@@ -46,10 +46,6 @@ for row in memes:
 				 			"scores": scores
 				 		}
 				 	})
-				 	db.memes.insert_one( {
-				 		"_id": memeUrl,
-				 		"scores": scores
-				 		})
 			conn.close()
 		except Exception as e:
 			print(e.message)
