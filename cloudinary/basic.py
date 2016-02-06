@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 import os, sys
+from pymongo import MongoClient
+from urllib2 import Request
+from urllib2 import HTTPError
+import httplib, base64, json
 
 from cloudinary.uploader import upload
 from cloudinary.utils import cloudinary_url
@@ -16,6 +20,9 @@ print set_directory
 
 TAG = "videos"
 
+client = MongoClient('dyn-160-39-150-144.dyn.columbia.edu', 27000)
+db = client['photos']
+
 def dump_response(response):
     print("Upload response:")
     for key in sorted(response.keys()):
@@ -23,7 +30,7 @@ def dump_response(response):
 
 def upload_files():
     print("--- Upload a local file")
-    url_list = []
+    # url_list = []
     for x in set_directory:
         if not x.startswith('.'):
             response = upload("screens/"+x, tags = TAG)
@@ -33,8 +40,37 @@ def upload_files():
             )
             print("video" + url)
             print("")
-            url_list.append(url)
-    print ("ve",url_list)
+            # url_list.append(url)
+
+            headers = {
+        # Request headers
+        'Content-Type': 'application/json',
+        'Ocp-Apim-Subscription-Key': '2750c64f4fcd4c398aac157a5d77c675',
+        }
+        body = {
+        'url': url,
+        }
+        try:
+            conn = httplib.HTTPSConnection('api.projectoxford.ai')
+            conn.request("POST", "/emotion/v1.0/recognize", json.dumps(body), headers)
+            resp = conn.getresponse()
+            if resp.status == 200:
+                data = resp.read().decode('utf-8')
+                if len(data) > 2:
+                    j_data = json.loads(data)
+                    scores = j_data[0]['scores']
+                    db.photos.insert_one(
+                        {"_id": url,
+                        "scores": scores
+                    })
+            conn.close()
+        except Exception as e:
+            print(e.message)
+        dat = db.photos.find()
+        for i in dat:
+            print i
+
+    # print (url_list)
 def cleanup():
     response = resources_by_tag(TAG)
     count = len(response.get('resources', []))
