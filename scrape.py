@@ -21,4 +21,3 @@ for row in memes:
 			"_id": memeUrl
 			}
 		)
-
