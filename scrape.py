@@ -1,3 +1,6 @@
+## scrape.py
+## Scrapes memes from google and puts them into database with emotion score
+
 import requests
 import urllib2
 from urllib2 import Request
@@ -6,14 +9,15 @@ from bs4 import BeautifulSoup
 from pymongo import MongoClient
 import httplib, urlparse, base64, json
 
+# GET request to google images, parse table for meme URL's
 url = 'https://www.google.com/search?q=meme&safe=off&biw=1279&bih=617&source=lnms&tbm=isch&sa=X&'
 response = requests.get(url)
-
 html = response.content
 soup = BeautifulSoup(html, "html.parser")
 
 images = soup.find('table', attrs={'class': 'images_table'})
 
+# Iterate through table getting URLs
 memes = images.findAll('td')
 client = MongoClient('dyn-160-39-150-144.dyn.columbia.edu', 27000)
 db = client['memes']
@@ -21,7 +25,8 @@ for row in memes:
 	if row.find('a') is not None:
 		memeUrl = row.find('img').get('src')
 		headers = {
-		# Request headers
+		
+		# Request headers to Project Oxford API to get emotional score
 		'Content-Type': 'application/json',
 		'Ocp-Apim-Subscription-Key': '2750c64f4fcd4c398aac157a5d77c675',
 		}
@@ -39,6 +44,8 @@ for row in memes:
 				if len(data) > 2:
 				 	j_data = json.loads(data)
 				 	scores = j_data[0]['scores']
+				 	
+				 	# Load URL and emotional vector into database
 				 	db.memes.update_one(
 				 		{"_id": memeUrl},
 				 		{
