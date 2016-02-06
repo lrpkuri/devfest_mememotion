@@ -17,10 +17,7 @@ db = client['memes']
 for row in memes:
 	if row.find('a') is not None:
 		memeUrl = row.find('img').get('src')
-        print memeUrl
-		# db.memes.insert_one( {
-		# 	"_id": memeUrl
-		# 	}
-		# )
-
-
+		db.memes.insert_one( {
+			"_id": memeUrl
+			}
+		)
