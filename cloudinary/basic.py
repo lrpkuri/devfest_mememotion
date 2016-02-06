@@ -12,7 +12,7 @@ if os.path.exists('settings.py'):
 
 directory = os.listdir("screens/")
 set_directory = set(directory)
-print (set_directory,"f,d,f,d,fd")
+print set_directory
 
 TAG = "videos"
 
@@ -23,17 +23,18 @@ def dump_response(response):
 
 def upload_files():
     print("--- Upload a local file")
-    response = upload("screens/frame_1_2.jpeg", tags = TAG)
-    dump_response(response)
-    url, options = cloudinary_url(response['public_id'],
-        format = response['format'],
-        # width = 200,
-        # height = 150,
-        # crop = "fill"
-    )
-    print("video" + url)
-    print("")
-
+    url_list = []
+    for x in set_directory:
+        if not x.startswith('.'):
+            response = upload("screens/"+x, tags = TAG)
+            dump_response(response)
+            url, options = cloudinary_url(response['public_id'],
+                format = response['format'],
+            )
+            print("video" + url)
+            print("")
+            url_list.append(url)
+    print ("ve",url_list)
 def cleanup():
     response = resources_by_tag(TAG)
     count = len(response.get('resources', []))
